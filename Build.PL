@@ -7,6 +7,10 @@ my $builder = Module::Build->new(
     license             => 'perl',
     dist_author         => 'Mario Domgoergen <dom@math.uni-bonn.de>',
     dist_version_from   => 'lib/Bot/BasicBot/Pluggable/Module/RSS.pm',
+    requires => {
+	'POE' => 0,
+	'POE::Component::RSSAggregator' => 0,
+	'Bot::BasicBot::Pluggable' => 0,
     build_requires => {
         'Test::More' => 0,
     },
