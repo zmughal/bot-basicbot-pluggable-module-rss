@@ -136,7 +136,7 @@ sub help {
 
 =head1 NAME
 
-Bot::BasicBot::Pluggable::Module::RSS - The great new Bot::BasicBot::Pluggable::Module::RSS!
+Bot::BasicBot::Pluggable::Module::RSS - RSS feed aggregator for your bot
 
 =head1 VERSION
 
@@ -149,35 +149,10 @@ our $VERSION = '0.01';
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
-
-Perhaps a little code snippet.
-
     !load RSS
     rss add http://search.cpan.org/uploads.rdf
     rss list
     rss remove http://search.cpan.org/uploads.rdf
-
-=head1 EXPORT
-
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
-
-=head1 FUNCTIONS
-
-=head2 function1
-
-=cut
-
-sub function1 {
-}
-
-=head2 function2
-
-=cut
-
-sub function2 {
-}
 
 =head1 AUTHOR
 
@@ -222,8 +197,9 @@ L<http://search.cpan.org/dist/Bot-BasicBot-Pluggable-Module-RSS>
 =back
 
 
-=head1 ACKNOWLEDGEMENTS
+=head1 SEE ALSO
 
+L<Bot::BasicBot::Pluggable>, L<POE::Component::RSSAggregator>
 
 =head1 COPYRIGHT & LICENSE
 

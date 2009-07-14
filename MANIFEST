@@ -3,6 +3,5 @@ Changes
 MANIFEST
 README
 lib/Bot/BasicBot/Pluggable/Module/RSS.pm
-t/00-load.t
-t/pod-coverage.t
-t/pod.t
+Makefile.PL
+META.yml

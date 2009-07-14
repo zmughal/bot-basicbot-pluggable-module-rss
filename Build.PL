@@ -11,11 +11,13 @@ my $builder = Module::Build->new(
 	'POE' => 0,
 	'POE::Component::RSSAggregator' => 0,
 	'Bot::BasicBot::Pluggable' => 0,
+    },
     build_requires => {
         'Test::More' => 0,
     },
     add_to_cleanup      => [ 'Bot-BasicBot-Pluggable-Module-RSS-*' ],
     create_makefile_pl => 'traditional',
+    create_readme => 1,
 );
 
 $builder->create_build_script();
