@@ -2,7 +2,7 @@ NAME
     Bot::BasicBot::Pluggable::Module::RSS - RSS feed aggregator for your bot
 
 VERSION
-    Version 0.01
+    Version 0.02
 
 SYNOPSIS
         !load RSS
@@ -20,7 +20,7 @@ DESCRIPTION
     fast changing rss feeds will result in sluggish behaviour.
 
 VARIABLES
-  tmp
+  tmpdir
     Directory to keep a cached feed (using Storable) to keep persistance
     between instances. This defaults to the first writable directory from a
     list of possible temporary directories as provided by File::Spec.
@@ -28,12 +28,29 @@ VARIABLES
   debug
     Turn debuging on console on. Off by default
 
-  init_headlines_seen
+  user_init_headlines_seen
     Mark all headlines as seen from the intial fetch, and only report new
     headlines that appear from that point forward. This defaults to true.
 
-  delay
+    Changing this variable will not modify any existing feeds.
+
+  user_delay
     Number of seconds between updates (defaults to 600).
+
+    Changing this variable will not modify any existing feeds.
+
+  user_format
+    The string defined by user_format will be formated in a printf like
+    fashion. The actually formatting is done by String::Format. The formats
+    'n', 't', and '%' are defined to be a newline, tab, and '%'. The default
+    format is 'RSS: %h <%u>'.
+
+    %h  The rss headline/title.
+
+    %u  The rss link/url. URI->canonical is called to attempt to normalize
+        the URL
+
+    %d  The description of the RSS headline.
 
 LIMITATIONS
     In the moment this module is only able to parse rss feeds and will throw

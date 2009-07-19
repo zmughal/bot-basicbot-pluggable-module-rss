@@ -6,22 +6,26 @@ use POE;
 use POE::Component::RSSAggregator;
 use Digest::MD5 qw(md5_hex);
 use File::Spec;
+use String::Format;
+
 use base qw(Bot::BasicBot::Pluggable::Module);
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 sub init {
     my $self = shift;
     $self->config(
         {
-            feeds               => {},
-            delay               => 600,
-            init_headlines_seen => 1,
-            debug               => 0,
-            tmpdir              => File::Spec->tmpdir(),
+            feeds                    => {},
+            user_delay               => 600,
+            user_init_headlines_seen => 1,
+            user_debug               => 0,
+            user_tmpdir              => File::Spec->tmpdir(),
+            user_format              => 'RSS: %h <%u>'
         }
     );
     $self->{feeds} = $self->get('feeds');
+## Please see file perltidy.ERR
 
     POE::Session->create(
         inline_states => {
@@ -62,11 +66,18 @@ sub handle_feed {
     my ( $kernel, $feed, $heap ) = ( $_[KERNEL], $_[ARG1]->[0], $_[HEAP] );
     my $module   = $heap->{module};
     my $uri      = $feed->url();
-    warn "URI: $uri\n";
-    my $feeds = $module->get('feeds');
+    my $feeds    = $module->get('feeds');
     my @channels = keys %{ $feeds->{$uri} };
     for my $headline ( $feed->late_breaking_news ) {
-        $module->tell( $_, $headline->headline ) for @channels;
+        my %formats = (
+            h => $headline->headline(),
+            u => $headline->url(),
+            d => $headline->description(),
+        );
+        my $user_format = $module->get('user_format');
+        foreach my $channel (@channels) {
+            $module->tell( $channel, stringf( $user_format, %formats ) );
+        }
     }
 }
 
@@ -154,7 +165,7 @@ Bot::BasicBot::Pluggable::Module::RSS - RSS feed aggregator for your bot
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =head1 SYNOPSIS
 
@@ -176,7 +187,7 @@ behaviour.
 
 =head1 VARIABLES
 
-=head2 tmp
+=head2 tmpdir
 
 Directory to keep a cached feed (using Storable) to keep persistance
 between instances. This defaults to the first writable directory
@@ -187,15 +198,42 @@ L<File::Spec>.
 
 Turn debuging on console on. Off by default
 
-=head2 init_headlines_seen
+=head2 user_init_headlines_seen
 
 Mark all headlines as seen from the intial fetch, and only report
 new headlines that appear from that point forward. This defaults
 to true.
 
-=head2 delay
+Changing this variable will not modify any existing feeds.
+
+=head2 user_delay
 
 Number of seconds between updates (defaults to 600).
+
+Changing this variable will not modify any existing feeds.
+
+=head2 user_format
+
+The string defined by user_format will be formated in a printf like
+fashion. The actually formatting is done by L<String::Format>. The
+formats 'n', 't', and '%' are defined to be a newline, tab, and
+'%'. The default format is 'RSS: %h <%u>'.
+
+=over 4
+
+=item %h
+
+The rss headline/title.
+
+=item %u
+
+The rss link/url. URI->canonical is called to attempt to normalize the URL
+
+=item %d
+
+The description of the RSS headline.
+
+=back
 
 =head1 LIMITATIONS
 
