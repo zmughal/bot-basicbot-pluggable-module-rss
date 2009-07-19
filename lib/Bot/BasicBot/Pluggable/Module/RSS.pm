@@ -25,7 +25,6 @@ sub init {
         }
     );
     $self->{feeds} = $self->get('feeds');
-## Please see file perltidy.ERR
 
     POE::Session->create(
         inline_states => {
@@ -47,7 +46,7 @@ sub init_session {
         tmpdir   => $module->get('tmpdir'),
     );
     foreach my $uri ( keys %{ $module->{feeds} } ) {
-        $kernel->post( 'rssagg', 'add_feed', $module->new_feed($uri) );
+        $kernel->call( 'rssagg', 'add_feed', $module->new_feed($uri) );
     }
 }
 
