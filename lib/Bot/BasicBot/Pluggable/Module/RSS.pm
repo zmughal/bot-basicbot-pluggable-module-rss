@@ -5,12 +5,22 @@ use strict;
 use POE;
 use POE::Component::RSSAggregator;
 use Digest::MD5 qw(md5_hex);
-
+use File::Spec;
 use base qw(Bot::BasicBot::Pluggable::Module);
+
+our $VERSION = '0.01';
 
 sub init {
     my $self = shift;
-    $self->config( { feeds => {}, delay => 10, init_headlines_seen => 1 } );
+    $self->config(
+        {
+            feeds               => {},
+            delay               => 600,
+            init_headlines_seen => 1,
+            debug               => 0,
+            tmpdir              => File::Spec->tmpdir(),
+        }
+    );
     $self->{feeds} = $self->get('feeds');
 
     POE::Session->create(
@@ -25,16 +35,16 @@ sub init {
 
 sub init_session {
     my ( $kernel, $heap, $session, $module ) = @_[ KERNEL, HEAP, SESSION, ARG0 ];
+    $heap->{module} = $module;
     $heap->{rssagg} = POE::Component::RSSAggregator->new(
         alias    => 'rssagg',
-        debug    => 1,
+        debug    => $module->get('debug'),
         callback => $session->postback("handle_feed"),
-        tmpdir   => '/tmp',                              # optional caching
+        tmpdir   => $module->get('tmpdir'),
     );
-    $heap->{module} = $module;
-	foreach my $uri ( keys %{ $module->{feeds}} ) {
-    		$kernel->post( 'rssagg', 'add_feed', $module->new_feed($uri));
-	}
+    foreach my $uri ( keys %{ $module->{feeds} } ) {
+        $kernel->post( 'rssagg', 'add_feed', $module->new_feed($uri) );
+    }
 }
 
 sub new_feed {
@@ -52,6 +62,7 @@ sub handle_feed {
     my ( $kernel, $feed, $heap ) = ( $_[KERNEL], $_[ARG1]->[0], $_[HEAP] );
     my $module   = $heap->{module};
     my $uri      = $feed->url();
+    warn "URI: $uri\n";
     my $feeds = $module->get('feeds');
     my @channels = keys %{ $feeds->{$uri} };
     for my $headline ( $feed->late_breaking_news ) {
@@ -89,9 +100,9 @@ sub told {
 sub add_feed {
 	my ($self,$channel,$uri) = @_;
 	if ($uri and ! $self->{feeds}->{$uri}->{$channel}) {
+    		POE::Kernel->call( 'rssagg', 'add_feed', $self->new_feed($uri));
 		$self->{feeds}->{$uri}->{$channel} = 1;
 		$self->set('feeds', $self->{feeds});
-    		POE::Kernel->post( 'rssagg', 'add_feed', $self->new_feed($uri));
 		return "Ok.";
 	}
 	return "Did you forget the uri or was this channel already added?";
@@ -100,14 +111,13 @@ sub add_feed {
 sub remove_feed {
 	my ($self,$channel,$uri) = @_;
 	if ( $self->{feeds}->{$uri}->{$channel} ) {
-		my $name = $self->{feeds}->{$uri}->{$channel};
 		delete $self->{feeds}->{$uri}->{$channel};
 		$self->set('feeds', keys %{$self->{feeds}});
 		## We remove the feed from poco if it's the last
 		if (!keys %{$self->{feeds}->{$uri}}) {
-			delete $self->{feeds}->{$uri};
 			my $name = md5_hex($uri);
-    			POE::Kernel->post( 'rssagg', 'remove_feed', $name );
+    			POE::Kernel->call( 'rssagg', 'remove_feed', $name );
+			delete $self->{feeds}->{$uri};
 		}
 		return "Ok.";
 	} else {
@@ -134,6 +144,10 @@ sub help {
 	return "rss [add uri|remove|list]";
 }
 
+1; # End of Bot::BasicBot::Pluggable::Module::RSS
+
+__END__
+
 =head1 NAME
 
 Bot::BasicBot::Pluggable::Module::RSS - RSS feed aggregator for your bot
@@ -142,17 +156,58 @@ Bot::BasicBot::Pluggable::Module::RSS - RSS feed aggregator for your bot
 
 Version 0.01
 
-=cut
-
-our $VERSION = '0.01';
-
-
 =head1 SYNOPSIS
 
     !load RSS
     rss add http://search.cpan.org/uploads.rdf
     rss list
     rss remove http://search.cpan.org/uploads.rdf
+
+=head1 DESCRIPTION
+
+This module enables your bot to monitor various RSS feeds for new
+headlines and post these to your channels. Every channel has it's
+own list of rss feeds, but in case two channels subscribed to the
+same rss feeds, it's only checked once and the bot posts changes
+to both channels.  Although this module does not block your bot due
+the non-blocking interface of L<POE::Component::RSSAggregator>,
+adding a lot of fast changing rss feeds will result in sluggish
+behaviour.
+
+=head1 VARIABLES
+
+=head2 tmp
+
+Directory to keep a cached feed (using Storable) to keep persistance
+between instances. This defaults to the first writable directory
+from a list of possible temporary directories as provided by
+L<File::Spec>.
+
+=head2 debug
+
+Turn debuging on console on. Off by default
+
+=head2 init_headlines_seen
+
+Mark all headlines as seen from the intial fetch, and only report
+new headlines that appear from that point forward. This defaults
+to true.
+
+=head2 delay
+
+Number of seconds between updates (defaults to 600).
+
+=head1 LIMITATIONS
+
+In the moment this module is only able to parse rss feeds and will
+throw a lot of warnings at you when you try to add an atom feed as
+the underlying wokrhorse of L<POE::Component::RSSAggregator> just
+support this one format.
+
+=head1 TODO
+
+The testuite is almost not existing as i'm not yet sure how to
+reliable test POE code. I'll have to look into that.
 
 =head1 AUTHOR
 
@@ -163,9 +218,6 @@ Mario Domgoergen, C<< <dom at math.uni-bonn.de> >>
 Please report any bugs or feature requests to C<bug-bot-basicbot-pluggable-module-rss at rt.cpan.org>, or through
 the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Bot-BasicBot-Pluggable-Module-RSS>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
-
-
-
 
 =head1 SUPPORT
 
@@ -209,6 +261,3 @@ This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 
 
-=cut
-
-1; # End of Bot::BasicBot::Pluggable::Module::RSS

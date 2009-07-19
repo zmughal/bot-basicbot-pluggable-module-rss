@@ -10,6 +10,41 @@ SYNOPSIS
         rss list
         rss remove http://search.cpan.org/uploads.rdf
 
+DESCRIPTION
+    This module enables your bot to monitor various RSS feeds for new
+    headlines and post these to your channels. Every channel has it's own
+    list of rss feeds, but in case two channels subscribed to the same rss
+    feeds, it's only checked once and the bot posts changes to both
+    channels. Although this module does not block your bot due the
+    non-blocking interface of POE::Component::RSSAggregator, adding a lot of
+    fast changing rss feeds will result in sluggish behaviour.
+
+VARIABLES
+  tmp
+    Directory to keep a cached feed (using Storable) to keep persistance
+    between instances. This defaults to the first writable directory from a
+    list of possible temporary directories as provided by File::Spec.
+
+  debug
+    Turn debuging on console on. Off by default
+
+  init_headlines_seen
+    Mark all headlines as seen from the intial fetch, and only report new
+    headlines that appear from that point forward. This defaults to true.
+
+  delay
+    Number of seconds between updates (defaults to 600).
+
+LIMITATIONS
+    In the moment this module is only able to parse rss feeds and will throw
+    a lot of warnings at you when you try to add an atom feed as the
+    underlying wokrhorse of POE::Component::RSSAggregator just support this
+    one format.
+
+TODO
+    The testuite is almost not existing as i'm not yet sure how to reliable
+    test POE code. I'll have to look into that.
+
 AUTHOR
     Mario Domgoergen, "<dom at math.uni-bonn.de>"
 

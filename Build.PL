@@ -11,6 +11,8 @@ my $builder = Module::Build->new(
 	'POE' => 0,
 	'POE::Component::RSSAggregator' => 0,
 	'Bot::BasicBot::Pluggable' => 0,
+	'File::Spec' => 0,
+	'Digest::MD5' => 0,
     },
     build_requires => {
         'Test::More' => 0,
