@@ -41,9 +41,9 @@ sub init_session {
     $heap->{module} = $module;
     $heap->{rssagg} = POE::Component::RSSAggregator->new(
         alias    => 'rssagg',
-        debug    => $module->get('debug'),
+        debug    => $module->get('user_debug'),
         callback => $session->postback("handle_feed"),
-        tmpdir   => $module->get('tmpdir'),
+        tmpdir   => $module->get('user_tmpdir'),
     );
     foreach my $uri ( keys %{ $module->{feeds} } ) {
         $kernel->call( 'rssagg', 'add_feed', $module->new_feed($uri) );
@@ -56,8 +56,8 @@ sub new_feed {
     return {
         url                 => $uri,
         name                => $name,
-        delay               => $self->get('delay'),
-        init_headlines_seen => $self->get('init_headlines_seen'),
+        delay               => $self->get('user_delay'),
+        init_headlines_seen => $self->get('user_init_headlines_seen'),
     };
 }
 
